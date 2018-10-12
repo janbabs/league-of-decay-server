@@ -4,6 +4,7 @@ import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
 import com.janbabs.leagueofdecayserver.exception.UnsupportedLeagueException;
 import com.janbabs.leagueofdecayserver.model.Player;
 import com.janbabs.leagueofdecayserver.model.SummonerMatches;
+import com.janbabs.leagueofdecayserver.transport.DecayTimerDTO;
 import com.janbabs.leagueofdecayserver.utils.LeagueTier;
 import com.janbabs.leagueofdecayserver.utils.ServerType;
 import org.springframework.stereotype.Service;
@@ -25,26 +26,23 @@ public class AnalyticsService {
         this.riotGamesApiService = riotGamesApiService;
     }
 
-    public int getTimeDifference(String server, String summonerName) throws UnsupportedLeagueException, IOException, NoMatchListException {
-        ServerType type = ServerType.valueOf(server.toUpperCase());
-        Player player = playerService.getPlayer(summonerName, server);
-        if (!isEligibleForDecay(player.getId(), type)) {
-            return -1;
-            // TODO: 07.10.2018 valid response for unranked...
-        }
+    public Integer getTimeDifference(Long accountId, ServerType type) throws IOException, NoMatchListException {
         SummonerMatches matches;
-        try {
-            matches = riotGamesApiService.getMatchList(player.getAccountId(), type);
-        } catch (FileNotFoundException e) {
+        try
+        {
+            matches = riotGamesApiService.getMatchList(accountId, type);
+        }
+        catch (FileNotFoundException e)
+        {
             throw new NoMatchListException("No matches in history!");
         }
         long lastRankedMatchTimestamp = matches.getLastRankedMatchTimestamp();
         Instant now = Instant.now();
-        return daysBetweenTwoDates(now, lastRankedMatchTimestamp) - NUMBEROFDAYSBEFOREDECAYSTARTS;
+        return  NUMBEROFDAYSBEFOREDECAYSTARTS - daysBetweenTwoDates(now, lastRankedMatchTimestamp);
     }
 
-
-    private int daysBetweenTwoDates(Instant instantStartDate, long endDate) {
+    private int daysBetweenTwoDates(Instant instantStartDate, long endDate)
+    {
         Instant instantEndDate = Instant.ofEpochMilli(endDate);
 
         Duration between = Duration.between(instantEndDate, instantStartDate);
@@ -54,19 +52,19 @@ public class AnalyticsService {
         return (int) days;
     }
 
-    public boolean isEligibleForDecay(Long summonerId, ServerType serverType) throws UnsupportedLeagueException {
-        LeagueTier playerLeague = riotGamesApiService.getPlayerLeague(summonerId, serverType);
-        if(playerLeague.isEligible()) {
-            switch (playerLeague) {
-                case MASTER:
-                case CHALLANGER:
-                    throw new UnsupportedLeagueException("Master and Challenger tier are unsupported");
-                default:
-                    return true;
-            }
-        }
-        return false;
+    public DecayTimerDTO getDecayTimer(String summonerName, String serverString) throws IOException, NoMatchListException {
+        DecayTimerDTO dto = new DecayTimerDTO();
+
+        ServerType type = ServerType.valueOf(serverString.toUpperCase());
+        Player player = playerService.getPlayer(summonerName, serverString);
+
+        LeagueTier leagueTier = riotGamesApiService.getPlayerLeague(player.getId(), type);
+        dto.setLeagueTier(leagueTier.toString());
+        dto.setEligibleForDecay(leagueTier.isEligible());
+
+        Integer daysBeforeDecay = getTimeDifference(player.getAccountId(), type);
+        dto.setDaysBeforeDecay(daysBeforeDecay);
+
+        return dto;
     }
-
-
 }

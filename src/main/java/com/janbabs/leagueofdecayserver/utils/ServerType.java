@@ -26,6 +26,7 @@ public enum ServerType {
 
     boolean isValid(String type) {
         type.toUpperCase();
-        return null;
+        return false;
+        // TODO: 11.10.2018 write checking enum type
     }
 }

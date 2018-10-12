@@ -3,18 +3,19 @@ package com.janbabs.leagueofdecayserver.controller;
 import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
 import com.janbabs.leagueofdecayserver.exception.UnsupportedLeagueException;
 import com.janbabs.leagueofdecayserver.service.AnalyticsService;
+import com.janbabs.leagueofdecayserver.transport.DecayTimerDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 
 
 @RestController
+@RequestMapping("/api")
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
@@ -24,8 +25,10 @@ public class AnalyticsController {
     }
 
     @GetMapping("/time/{server}/{name}")
-    public int timeDifference(@PathVariable("server") String server, @PathVariable("name") String summonerName) throws UnsupportedLeagueException, IOException, NoMatchListException {
-        return analyticsService.getTimeDifference(server, summonerName);
+    public DecayTimerDTO getDecayTimer(@PathVariable("server") String server,
+                                       @PathVariable("name") String summonerName) throws IOException, NoMatchListException
+    {
+        return analyticsService.getDecayTimer(summonerName, server);
     }
 
     @ExceptionHandler(UnsupportedLeagueException.class)
@@ -35,7 +38,7 @@ public class AnalyticsController {
 
     @ExceptionHandler(NoMatchListException.class)
     public ResponseEntity handleException (NoMatchListException e) {
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity(e, HttpStatus.NO_CONTENT);
     }
 
     @ExceptionHandler(IOException.class)

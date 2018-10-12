@@ -4,7 +4,7 @@ public enum LeagueTier {
     CHALLANGER(true),
     MASTER(true),
     DIAMOND(true),
-    PLATINIUM(true),
+    PLATINUM(true),
     GOLD(false),
     SILVER(false),
     BRONZE(false),
