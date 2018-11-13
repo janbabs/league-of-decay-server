@@ -62,9 +62,10 @@ public class AnalyticsService {
         dto.setLeagueTier(leagueTier.toString());
         dto.setEligibleForDecay(leagueTier.isEligible());
 
-        Integer daysBeforeDecay = getTimeDifference(player.getAccountId(), type);
-        dto.setDaysBeforeDecay(daysBeforeDecay);
-
+        if (leagueTier.isEligible()) {
+            Integer daysBeforeDecay = getTimeDifference(player.getAccountId(), type);
+            dto.setDaysBeforeDecay(daysBeforeDecay);
+        }
         return dto;
     }
 }
