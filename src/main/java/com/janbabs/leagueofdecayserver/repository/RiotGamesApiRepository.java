@@ -2,11 +2,10 @@ package com.janbabs.leagueofdecayserver.repository;
 
 import com.janbabs.leagueofdecayserver.exception.InvalidApiKeyException;
 import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
-import com.janbabs.leagueofdecayserver.service.ApiKeyService;
+import com.janbabs.leagueofdecayserver.service.ConfigService;
 import com.janbabs.leagueofdecayserver.utils.ServerType;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,24 +13,25 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Repository
 public class RiotGamesApiRepository {
-    public static final String SummonerByIdURL = "api.riotgames.com/lol/summoner/v3/summoners/by-name/";
-    public static final String MatchListByAcIdURL = "api.riotgames.com/lol/match/v3/matchlists/by-account/";
-    public static final String LeagueByIdURL = "api.riotgames.com/lol/league/v3/positions/by-summoner/";
+    private static final String SummonerByIdURL = "api.riotgames.com/lol/summoner/v3/summoners/by-name/";
+    private static final String MatchListByAcIdURL = "api.riotgames.com/lol/match/v3/matchlists/by-account/";
+    private static final String LeagueByIdURL = "api.riotgames.com/lol/league/v3/positions/by-summoner/";
 
     private String apiKey;
 
-    private ApiKeyService apiKeyService;
+    private ConfigService configService;
 
-    public RiotGamesApiRepository(ApiKeyService apiKeyService) {
-        this.apiKeyService = apiKeyService;
+    public RiotGamesApiRepository(ConfigService configService) {
+        this.configService = configService;
     }
 
     public String getPlayerJsonFromSummonerName(String summonerName, ServerType serverType) throws IOException {
         String  jsonString;
-        summonerName = URLEncoder.encode(summonerName, "UTF-8");
+        summonerName = URLEncoder.encode(summonerName, StandardCharsets.UTF_8);
         jsonString = getJSonFromServer("https://" + serverType + "." +
                         SummonerByIdURL + summonerName);
         return jsonString;
@@ -61,7 +61,8 @@ public class RiotGamesApiRepository {
         return JsonString;
     }
 
-    public String getJSonFromServer(String urlString) throws IOException {
+    private String getJSonFromServer(String urlString) throws IOException {
+        checkApiKey();
         BufferedReader reader = null;
         try {
             URL url;
@@ -93,9 +94,13 @@ public class RiotGamesApiRepository {
         }
     }
 
-    @PostConstruct
-    public void  initIt() {
-        apiKey = apiKeyService.getApiKeyValue();
+    private void  checkApiKey() throws InvalidApiKeyException {
+        if (apiKey == null)
+            try{
+                apiKey = configService.getApiKeyValue();
+            } catch (NullPointerException e) {
+                throw new InvalidApiKeyException("No api key in database!");
+            }
     }
 
     public String getMatchListJson(Long accountId, ServerType type, int numberOfGames) throws IOException, NoMatchListException {
@@ -109,5 +114,9 @@ public class RiotGamesApiRepository {
             throw new NoMatchListException();
         }
 
+    }
+
+    public void updateApiKey() {
+        this.apiKey = configService.getApiKeyValue();
     }
 }

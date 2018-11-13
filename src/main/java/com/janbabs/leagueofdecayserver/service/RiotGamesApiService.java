@@ -10,7 +10,6 @@ import com.janbabs.leagueofdecayserver.utils.LeagueTier;
 import com.janbabs.leagueofdecayserver.utils.ServerType;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -67,7 +66,7 @@ public class RiotGamesApiService {
     }
 
     public void upDateKey() {
-        riotGamesApiRepository.initIt();
+        riotGamesApiRepository.updateApiKey();
     }
 
     static class League
