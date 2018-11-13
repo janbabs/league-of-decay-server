@@ -10,6 +10,7 @@ import com.janbabs.leagueofdecayserver.utils.LeagueTier;
 import com.janbabs.leagueofdecayserver.utils.ServerType;
 import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -40,6 +41,14 @@ public class RiotGamesApiService {
         Gson gson = new Gson();
         String jsonString = riotGamesApiRepository.getMatchListJson(accountId, type);
         return gson.fromJson(jsonString, SummonerMatches.class);
+        // TODO: 22.10.2018 clean up code
+    }
+
+    public SummonerMatches getMatchList(Long accountId, ServerType type, int numberOfGames) throws IOException, NoMatchListException {
+        Gson gson = new Gson();
+        String jsonString = riotGamesApiRepository.getMatchListJson(accountId, type, numberOfGames);
+        return gson.fromJson(jsonString, SummonerMatches.class);
+        // TODO: 22.10.2018 clean up code
     }
 
     public LeagueTier getPlayerLeague(long summonerId, ServerType type) {

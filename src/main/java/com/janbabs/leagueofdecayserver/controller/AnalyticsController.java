@@ -1,18 +1,14 @@
 package com.janbabs.leagueofdecayserver.controller;
 
 import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
-import com.janbabs.leagueofdecayserver.exception.UnsupportedLeagueException;
+import com.janbabs.leagueofdecayserver.exception.NoRankedMatchException;
 import com.janbabs.leagueofdecayserver.service.AnalyticsService;
 import com.janbabs.leagueofdecayserver.transport.DecayTimerDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-
 
 @RestController
 @RequestMapping("/api")
@@ -26,14 +22,9 @@ public class AnalyticsController {
 
     @GetMapping("/time/{server}/{name}")
     public DecayTimerDTO getDecayTimer(@PathVariable("server") String server,
-                                       @PathVariable("name") String summonerName) throws IOException, NoMatchListException
-    {
+                                       @PathVariable("name") String summonerName)
+            throws IOException, NoMatchListException, NoRankedMatchException {
         return analyticsService.getDecayTimer(summonerName, server);
-    }
-
-    @ExceptionHandler(UnsupportedLeagueException.class)
-    public String handleException (UnsupportedLeagueException e) {
-        return e.getMessage();
     }
 
     @ExceptionHandler(NoMatchListException.class)

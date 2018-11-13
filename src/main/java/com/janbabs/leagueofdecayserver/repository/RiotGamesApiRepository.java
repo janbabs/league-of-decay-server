@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 
 @Repository
 public class RiotGamesApiRepository {
@@ -30,6 +31,7 @@ public class RiotGamesApiRepository {
 
     public String getPlayerJsonFromSummonerName(String summonerName, ServerType serverType) throws IOException {
         String  jsonString;
+        summonerName = URLEncoder.encode(summonerName, "UTF-8");
         jsonString = getJSonFromServer("https://" + serverType + "." +
                         SummonerByIdURL + summonerName);
         return jsonString;
@@ -44,8 +46,6 @@ public class RiotGamesApiRepository {
         } catch (FileNotFoundException e) {
             throw new NoMatchListException();
         }
-
-
     }
 
     public String getPlayerLeague(long summonerId, ServerType serverType) {
@@ -64,7 +64,13 @@ public class RiotGamesApiRepository {
     public String getJSonFromServer(String urlString) throws IOException {
         BufferedReader reader = null;
         try {
-            URL url = new URL(urlString + "?api_key=" +apiKey);
+            URL url;
+            if (urlString.contains("?")) {
+                url = new URL(urlString + "&api_key=" + apiKey);
+            } else {
+                url = new URL(urlString + "?api_key=" + apiKey);
+            }
+
             HttpURLConnection connection = (HttpURLConnection) new URL(url.toString()).openConnection();
             final int responseCode = connection.getResponseCode();
             switch (responseCode) {
@@ -92,4 +98,16 @@ public class RiotGamesApiRepository {
         apiKey = apiKeyService.getApiKeyValue();
     }
 
+    public String getMatchListJson(Long accountId, ServerType type, int numberOfGames) throws IOException, NoMatchListException {
+        String  serverType = type.toString(),
+                jsonString;
+        try {
+            jsonString = getJSonFromServer("https://" + serverType + "." + MatchListByAcIdURL + accountId +
+                    "?endIndex=" + numberOfGames + "&queue=420");
+            return jsonString;
+        } catch (FileNotFoundException e) {
+            throw new NoMatchListException();
+        }
+
+    }
 }

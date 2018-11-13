@@ -1,8 +1,8 @@
 package com.janbabs.leagueofdecayserver.utils;
 
 public enum LeagueTier {
-    CHALLANGER(true),
-    MASTER(true),
+    CHALLANGER(false),
+    MASTER(false),
     DIAMOND(true),
     PLATINUM(true),
     GOLD(false),
