@@ -14,7 +14,7 @@ public class Participants
 
     private String summonerName;
 
-    private String championId;
+    private Integer championId;
 
     private String teamId;
 
@@ -82,12 +82,12 @@ public class Participants
         this.summonerName = summonerName;
     }
 
-    public String getChampionId ()
+    public Integer getChampionId ()
     {
         return championId;
     }
 
-    public void setChampionId (String championId)
+    public void setChampionId (Integer championId)
     {
         this.championId = championId;
     }
