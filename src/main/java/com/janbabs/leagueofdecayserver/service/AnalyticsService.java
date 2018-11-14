@@ -3,6 +3,7 @@ package com.janbabs.leagueofdecayserver.service;
 import com.janbabs.leagueofdecayserver.exception.NoCurrentlyPlayedGame;
 import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
 import com.janbabs.leagueofdecayserver.exception.NoRankedMatchException;
+import com.janbabs.leagueofdecayserver.model.Champion;
 import com.janbabs.leagueofdecayserver.model.Player;
 import com.janbabs.leagueofdecayserver.model.SummonerMatches;
 import com.janbabs.leagueofdecayserver.riotgamesModels.League;
@@ -18,8 +19,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,10 +30,12 @@ public class AnalyticsService {
     public static final int NUMBEROFDAYSBEFOREDECAYSTARTSFORPLANINUMANDDIAMOND = 28;
     private final PlayerService playerService;
     private final RiotGamesApiService riotGamesApiService;
+    private final ChampionService championService;
 
-    public AnalyticsService(PlayerService playerService, RiotGamesApiService riotGamesApiService) {
+    public AnalyticsService(PlayerService playerService, RiotGamesApiService riotGamesApiService, ChampionService championService) {
         this.playerService = playerService;
         this.riotGamesApiService = riotGamesApiService;
+        this.championService = championService;
     }
 
     private Integer getTimeDifference(Long accountId, ServerType type) throws IOException, NoMatchListException, NoRankedMatchException {
@@ -89,6 +92,7 @@ public class AnalyticsService {
                         throw new UncheckedIOException(e1);
                     }
                     }).collect(Collectors.toList());
+            putChampions(participants, dtos);
                 return dtos;
         }
                 catch (UncheckedIOException e) {
@@ -112,5 +116,24 @@ public class AnalyticsService {
 
         MatchPlayerDTO.PlayerDTOBuilder builder = new MatchPlayerDTO.PlayerDTOBuilder();
         return builder.summonerName(name).leagueTier(leagueTier).rank(rank).team(team).build();
+    }
+
+    private void putChampions(List<Participants> participants, List<MatchPlayerDTO> dtos) {
+        List<Integer> ids = participants.stream().map(Participants::getChampionId).collect(Collectors.toList());
+        List<Champion> championsByIds = championService.getChampionsByIds(ids);
+        for (MatchPlayerDTO dto :
+                dtos) {
+            for (Participants participant:
+                 participants) { if (dto.getSummonerName() == participant.getSummonerName()) {
+                for (Champion champion :
+                        championsByIds) { if(champion.getId() == participant.getChampionId()) {
+                            dto.setChampionName(champion.getName());
+                            break;
+                }
+
+                }
+            }
+            }
+        }
     }
 }

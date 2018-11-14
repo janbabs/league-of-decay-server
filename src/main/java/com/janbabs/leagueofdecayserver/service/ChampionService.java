@@ -5,7 +5,6 @@ import com.janbabs.leagueofdecayserver.repository.ChampionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ChampionService {
@@ -15,7 +14,7 @@ public class ChampionService {
         this.championRepository = championRepository;
     }
 
-    public Map<Integer, Champion> getChampionsByIds(List<Integer> id) {
+    public List<Champion> getChampionsByIds(List<Integer> id) {
         return championRepository.findAllById(id);
     }
 }
