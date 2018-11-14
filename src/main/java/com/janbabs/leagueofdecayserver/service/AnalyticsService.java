@@ -1,10 +1,14 @@
 package com.janbabs.leagueofdecayserver.service;
 
+import com.janbabs.leagueofdecayserver.exception.NoCurrentlyPlayedGame;
 import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
 import com.janbabs.leagueofdecayserver.exception.NoRankedMatchException;
 import com.janbabs.leagueofdecayserver.model.Player;
 import com.janbabs.leagueofdecayserver.model.SummonerMatches;
+import com.janbabs.leagueofdecayserver.riotgamesModels.League;
+import com.janbabs.leagueofdecayserver.riotgamesModels.Participants;
 import com.janbabs.leagueofdecayserver.transport.DecayTimerDTO;
+import com.janbabs.leagueofdecayserver.transport.MatchPlayerDTO;
 import com.janbabs.leagueofdecayserver.utils.LeagueTier;
 import com.janbabs.leagueofdecayserver.utils.ServerType;
 import org.springframework.stereotype.Service;
@@ -13,6 +17,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class AnalyticsService {
@@ -26,7 +33,7 @@ public class AnalyticsService {
         this.riotGamesApiService = riotGamesApiService;
     }
 
-    public Integer getTimeDifference(Long accountId, ServerType type) throws IOException, NoMatchListException, NoRankedMatchException {
+    private Integer getTimeDifference(Long accountId, ServerType type) throws IOException, NoMatchListException, NoRankedMatchException {
         SummonerMatches matches;
         try
         {
@@ -58,7 +65,7 @@ public class AnalyticsService {
         ServerType type = ServerType.valueOf(serverString.toUpperCase());
         Player player = playerService.getPlayer(summonerName, serverString);
 
-        LeagueTier leagueTier = riotGamesApiService.getPlayerLeague(player.getId(), type);
+        LeagueTier leagueTier = riotGamesApiService.getPlayerLeague(player.getId(), type).getLeagueTier();
         dto.setLeagueTier(leagueTier.toString());
         dto.setEligibleForDecay(leagueTier.isEligible());
 
@@ -67,5 +74,43 @@ public class AnalyticsService {
             dto.setDaysBeforeDecay(daysBeforeDecay);
         }
         return dto;
+    }
+
+    public MatchPlayerDTO[] getCurrentMatchDetails(ServerType server, String summonerName) throws IOException, NoCurrentlyPlayedGame {
+//        List<Participants> participants = Arrays.asList(riotGamesApiService.getParticipants(server, summonerName));
+//        List<MatchPlayerDTO> dtos = new ArrayList();
+
+        Participants[] participants = riotGamesApiService.getParticipants(server, summonerName);
+        MatchPlayerDTO[] dtos = new MatchPlayerDTO[participants.length];
+
+        String name;
+        String championName;
+        String team;
+        String leagueTier;
+        String rank;
+        int teamNumber;
+        League league;
+        Player player;
+
+        for (int i = 0; i < participants.length; i++) {
+                name = participants[i].getSummonerName();
+                teamNumber = Integer.valueOf(participants[i].getTeamId());
+                if (teamNumber == 100) team = "blue";
+                else team = "red";
+                player = riotGamesApiService.getPlayer(participants[i].getSummonerName(), server);
+                league = riotGamesApiService.getPlayerLeague(player.getId(), server);
+                leagueTier = league.getLeagueTier().toString();
+                rank = league.getRank();
+
+                MatchPlayerDTO.PlayerDTOBuilder builder = new MatchPlayerDTO.PlayerDTOBuilder();
+                dtos[i] = builder.summonerName(name).leagueTier(leagueTier).rank(rank).team(team).build();
+        }
+
+//        participants.stream().map(e -> {
+//
+//        })
+//
+        return dtos;
+
     }
 }

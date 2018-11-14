@@ -1,6 +1,7 @@
 package com.janbabs.leagueofdecayserver.repository;
 
 import com.janbabs.leagueofdecayserver.exception.InvalidApiKeyException;
+import com.janbabs.leagueofdecayserver.exception.NoCurrentlyPlayedGame;
 import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
 import com.janbabs.leagueofdecayserver.service.ConfigService;
 import com.janbabs.leagueofdecayserver.utils.ServerType;
@@ -20,6 +21,7 @@ public class RiotGamesApiRepository {
     private static final String SummonerByIdURL = "api.riotgames.com/lol/summoner/v3/summoners/by-name/";
     private static final String MatchListByAcIdURL = "api.riotgames.com/lol/match/v3/matchlists/by-account/";
     private static final String LeagueByIdURL = "api.riotgames.com/lol/league/v3/positions/by-summoner/";
+    public static final String CurrentGameInfoBySmId = "api.riotgames.com/lol/spectator/v3/active-games/by-summoner/";
 
     private String apiKey;
 
@@ -31,7 +33,8 @@ public class RiotGamesApiRepository {
 
     public String getPlayerJsonFromSummonerName(String summonerName, ServerType serverType) throws IOException {
         String  jsonString;
-        summonerName = URLEncoder.encode(summonerName, StandardCharsets.UTF_8);
+//        summonerName = URLEncoder.encode(summonerName, StandardCharsets.UTF_8);
+//        summonerName = URLEncoder.encode(summonerName, "UTF-8");
         jsonString = getJSonFromServer("https://" + serverType + "." +
                         SummonerByIdURL + summonerName);
         return jsonString;
@@ -118,5 +121,15 @@ public class RiotGamesApiRepository {
 
     public void updateApiKey() {
         this.apiKey = configService.getApiKeyValue();
+    }
+
+    public String getParticipantsJson(ServerType server, Long summonerId) throws NoCurrentlyPlayedGame, IOException {
+        String serverType = server.toString(), jsonString;
+        try {
+            jsonString = getJSonFromServer("https://" + serverType + "." + CurrentGameInfoBySmId + summonerId);
+            return jsonString;
+        } catch (FileNotFoundException e) {
+            throw new NoCurrentlyPlayedGame();
+        }
     }
 }

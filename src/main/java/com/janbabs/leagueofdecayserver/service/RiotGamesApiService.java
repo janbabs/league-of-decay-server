@@ -1,11 +1,13 @@
 package com.janbabs.leagueofdecayserver.service;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import com.janbabs.leagueofdecayserver.exception.NoCurrentlyPlayedGame;
 import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
 import com.janbabs.leagueofdecayserver.model.Player;
 import com.janbabs.leagueofdecayserver.model.SummonerMatches;
 import com.janbabs.leagueofdecayserver.repository.RiotGamesApiRepository;
+import com.janbabs.leagueofdecayserver.riotgamesModels.Participants;
 import com.janbabs.leagueofdecayserver.utils.LeagueTier;
 import com.janbabs.leagueofdecayserver.utils.ServerType;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,10 @@ public class RiotGamesApiService {
 
     public Player getPlayer(String summonerName, ServerType serverType) throws IOException {
 
+        summonerName = summonerName.replaceAll(" ", "%20");
+
         String JsonString = riotGamesApiRepository.getPlayerJsonFromSummonerName(summonerName, serverType);
+
 
         Gson gson = new Gson();
         Player player = gson.fromJson(JsonString, Player.class);
@@ -50,7 +55,7 @@ public class RiotGamesApiService {
         // TODO: 22.10.2018 clean up code
     }
 
-    public LeagueTier getPlayerLeague(long summonerId, ServerType type) {
+    public com.janbabs.leagueofdecayserver.riotgamesModels.League getPlayerLeague(long summonerId, ServerType type) {
         Gson gson = new Gson();
         String jsonString = riotGamesApiRepository.getPlayerLeague(summonerId, type);
         List<League> leagues = gson.fromJson(jsonString, new TypeToken<List<League>>(){}.getType());
@@ -59,17 +64,33 @@ public class RiotGamesApiService {
         for (League league: leagues) {
             if (league.queueType.equals("RANKED_SOLO_5x5")) {
                 tier = LeagueTier.valueOf(league.tier);
-                return tier;
+                return new com.janbabs.leagueofdecayserver.riotgamesModels.League(LeagueTier.valueOf(league.tier), league.rank);
             }
         }
-        return UNRANKED;
+        return new com.janbabs.leagueofdecayserver.riotgamesModels.League(UNRANKED, null);
     }
 
     public void upDateKey() {
         riotGamesApiRepository.updateApiKey();
     }
 
-    static class League
+    public Participants[] getParticipants(ServerType server, String summonerName) throws IOException, NoCurrentlyPlayedGame {
+        Gson gson = new Gson();
+        Player player = getPlayer(summonerName, server);
+        //Geting currentGameInfo
+        String json = riotGamesApiRepository.getParticipantsJson(server, player.getId());
+        JsonParser parser = new JsonParser();
+        JsonObject obj = parser.parse(json).getAsJsonObject();
+        //Parsing currentGameInfo to participants
+        JsonElement element = obj.get("participants");
+
+        //Creating participants from JsonElement
+        Participants[] participants = gson.fromJson(element, Participants[].class);
+
+        return participants;
+    }
+
+    static private class League
     {
         private String hotStreak;
 

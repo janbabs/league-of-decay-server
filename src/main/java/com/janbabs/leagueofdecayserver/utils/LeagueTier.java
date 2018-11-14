@@ -11,7 +11,10 @@ public enum LeagueTier {
     IRON(false),
     UNRANKED(false);
 
+
+
     private boolean eligible;
+
 
     LeagueTier(boolean eligible) {
         this.eligible = eligible;
