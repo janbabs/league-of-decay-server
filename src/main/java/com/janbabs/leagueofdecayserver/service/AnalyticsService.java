@@ -15,11 +15,13 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AnalyticsService {
@@ -76,41 +78,39 @@ public class AnalyticsService {
         return dto;
     }
 
-    public MatchPlayerDTO[] getCurrentMatchDetails(ServerType server, String summonerName) throws IOException, NoCurrentlyPlayedGame {
-//        List<Participants> participants = Arrays.asList(riotGamesApiService.getParticipants(server, summonerName));
-//        List<MatchPlayerDTO> dtos = new ArrayList();
-
-        Participants[] participants = riotGamesApiService.getParticipants(server, summonerName);
-        MatchPlayerDTO[] dtos = new MatchPlayerDTO[participants.length];
-
-        String name;
-        String championName;
-        String team;
-        String leagueTier;
-        String rank;
-        int teamNumber;
-        League league;
-        Player player;
-
-        for (int i = 0; i < participants.length; i++) {
-                name = participants[i].getSummonerName();
-                teamNumber = Integer.valueOf(participants[i].getTeamId());
-                if (teamNumber == 100) team = "blue";
-                else team = "red";
-                player = riotGamesApiService.getPlayer(participants[i].getSummonerName(), server);
-                league = riotGamesApiService.getPlayerLeague(player.getId(), server);
-                leagueTier = league.getLeagueTier().toString();
-                rank = league.getRank();
-
-                MatchPlayerDTO.PlayerDTOBuilder builder = new MatchPlayerDTO.PlayerDTOBuilder();
-                dtos[i] = builder.summonerName(name).leagueTier(leagueTier).rank(rank).team(team).build();
+    public List<MatchPlayerDTO> getCurrentMatchDetails(ServerType server, String summonerName) throws IOException, NoCurrentlyPlayedGame {
+        List<Participants> participants = Arrays.asList(riotGamesApiService.getParticipants(server, summonerName));
+        try {
+            List<MatchPlayerDTO> dtos = participants.parallelStream().map
+                    (e -> {
+                    try {
+                        return getMatchPlayerDTOFromParticipant(e, server);
+                    } catch (IOException e1) {
+                        throw new UncheckedIOException(e1);
+                    }
+                    }).collect(Collectors.toList());
+                return dtos;
         }
+                catch (UncheckedIOException e) {
+                    throw new IOException();
+                }
+    }
 
-//        participants.stream().map(e -> {
-//
-//        })
-//
-        return dtos;
+    private MatchPlayerDTO getMatchPlayerDTOFromParticipant(Participants participant, ServerType server) throws IOException {
+        String name, team, leagueTier, rank;
+        int teamNumber = Integer.valueOf(participant.getTeamId());
 
+        name = participant.getSummonerName();
+        if (teamNumber == 100) team = "blue";
+        else team = "red";
+        System.out.println("Pobieram gracza " + participant.getSummonerName());
+        Player player = riotGamesApiService.getPlayer(participant.getSummonerName(), server);
+        System.out.println("pobieram lige " + participant.getSummonerName());
+        League league = riotGamesApiService.getPlayerLeague(player.getId(), server);
+        leagueTier = league.getLeagueTier().toString();
+        rank = league.getRank();
+
+        MatchPlayerDTO.PlayerDTOBuilder builder = new MatchPlayerDTO.PlayerDTOBuilder();
+        return builder.summonerName(name).leagueTier(leagueTier).rank(rank).team(team).build();
     }
 }

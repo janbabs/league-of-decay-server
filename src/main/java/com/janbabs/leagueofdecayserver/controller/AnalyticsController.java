@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -32,7 +33,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/playedMatchDetail/{server}/{summonerName}")
-    public MatchPlayerDTO[] getMatchPLayer(@PathVariable String server, @PathVariable String summonerName) throws UnsupportedServerType, IOException, NoCurrentlyPlayedGame {
+    public List<MatchPlayerDTO> getMatchPLayer(@PathVariable String server, @PathVariable String summonerName) throws UnsupportedServerType, IOException, NoCurrentlyPlayedGame {
         ServerType type;
         try {
             type = ServerType.valueOf(server.toUpperCase());
