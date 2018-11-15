@@ -16,10 +16,20 @@ public class Champion {
     private Integer id;
     @Column(length = 40)
     private String title;
-    @Column(name = "champion_key", length = 30)
+    @Column(name = "champion_key", length = 256)
     private String key;
+    @Column(length = 200)
+    private String blurb;
 
     public Champion() {
+    }
+
+    public String getBlurb() {
+        return blurb;
+    }
+
+    public void setBlurb(String blurb) {
+        this.blurb = blurb;
     }
 
     public String getName() {
@@ -52,5 +62,10 @@ public class Champion {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    @Override
+    public String toString() {
+        return "Champion: name: " + name + " id: " + id;
     }
 }

@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,20 +40,16 @@ public class AnalyticsService {
 
     private Integer getTimeDifference(Long accountId, ServerType type) throws IOException, NoMatchListException, NoRankedMatchException {
         SummonerMatches matches;
-        try
-        {
+        try {
             matches = riotGamesApiService.getMatchList(accountId, type, 1);
-        }
-        catch (FileNotFoundException e)
-        {
+        } catch (FileNotFoundException e) {
             throw new NoMatchListException("No matches in history!");
         }
         long lastRankedMatchTimestamp = matches.getLastRankedMatchTimestamp();
-        return  NUMBEROFDAYSBEFOREDECAYSTARTSFORPLANINUMANDDIAMOND - daysBetweenTwoDates(Instant.now(), lastRankedMatchTimestamp);
+        return NUMBEROFDAYSBEFOREDECAYSTARTSFORPLANINUMANDDIAMOND - daysBetweenTwoDates(Instant.now(), lastRankedMatchTimestamp);
     }
 
-    private int daysBetweenTwoDates(Instant instantStartDate, long endDate)
-    {
+    private int daysBetweenTwoDates(Instant instantStartDate, long endDate) {
         Instant instantEndDate = Instant.ofEpochMilli(endDate);
 
         Duration between = Duration.between(instantEndDate, instantStartDate);
@@ -86,18 +82,17 @@ public class AnalyticsService {
         try {
             List<MatchPlayerDTO> dtos = participants.parallelStream().map
                     (e -> {
-                    try {
-                        return getMatchPlayerDTOFromParticipant(e, server);
-                    } catch (IOException e1) {
-                        throw new UncheckedIOException(e1);
-                    }
+                        try {
+                            return getMatchPlayerDTOFromParticipant(e, server);
+                        } catch (IOException e1) {
+                            throw new UncheckedIOException(e1);
+                        }
                     }).collect(Collectors.toList());
             putChampions(participants, dtos);
-                return dtos;
+            return dtos;
+        } catch (UncheckedIOException e) {
+            throw new IOException();
         }
-                catch (UncheckedIOException e) {
-                    throw new IOException();
-                }
     }
 
     private MatchPlayerDTO getMatchPlayerDTOFromParticipant(Participants participant, ServerType server) throws IOException {
@@ -107,9 +102,9 @@ public class AnalyticsService {
         name = participant.getSummonerName();
         if (teamNumber == 100) team = "blue";
         else team = "red";
-        System.out.println("Pobieram gracza " + participant.getSummonerName());
+        System.out.println("Downloading player: " + participant.getSummonerName());
         Player player = riotGamesApiService.getPlayer(participant.getSummonerName(), server);
-        System.out.println("pobieram lige " + participant.getSummonerName());
+        System.out.println("Downloading league: " + participant.getSummonerName());
         League league = riotGamesApiService.getPlayerLeague(player.getId(), server);
         leagueTier = league.getLeagueTier().toString();
         rank = league.getRank();
@@ -119,21 +114,26 @@ public class AnalyticsService {
     }
 
     private void putChampions(List<Participants> participants, List<MatchPlayerDTO> dtos) {
-        List<Integer> ids = participants.stream().map(Participants::getChampionId).collect(Collectors.toList());
+        List<Participants> copyParticipants = new ArrayList<>(participants);
+        List<Integer> ids = copyParticipants.stream().map(Participants::getChampionId).collect(Collectors.toList());
         List<Champion> championsByIds = championService.getChampionsByIds(ids);
         for (MatchPlayerDTO dto :
                 dtos) {
-            for (Participants participant:
-                 participants) { if (dto.getSummonerName() == participant.getSummonerName()) {
-                for (Champion champion :
-                        championsByIds) { if(champion.getId() == participant.getChampionId()) {
+            for (Participants participant :
+                    copyParticipants) {
+                if (dto.getSummonerName() == participant.getSummonerName()) {
+                    for (Champion champion :
+                            championsByIds) {
+                        if (champion.getId().equals(participant.getChampionId())) {
                             dto.setChampionName(champion.getName());
                             break;
+                        }
+                    }
+                    copyParticipants.remove(participant);
+                    break;
                 }
-
-                }
-            }
             }
         }
     }
 }
+

@@ -1,9 +1,8 @@
 package com.janbabs.leagueofdecayserver.transport;
 
-import com.janbabs.leagueofdecayserver.utils.LeagueTier;
 
 public class MatchPlayerDTO {
-    private String  summonerName;
+    private String summonerName;
     private String leagueTier;
     private String rank;
     private String championName;
@@ -19,7 +18,6 @@ public class MatchPlayerDTO {
 
     public MatchPlayerDTO() {
     }
-
 
     public String getSummonerName() {
         return summonerName;
@@ -99,8 +97,6 @@ public class MatchPlayerDTO {
         public MatchPlayerDTO build() {
             return new MatchPlayerDTO(summonerName, leagueTier, rank, championName, team);
         }
-
-
     }
 
 }
