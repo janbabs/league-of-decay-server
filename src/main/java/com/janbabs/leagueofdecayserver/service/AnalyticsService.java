@@ -59,12 +59,10 @@ public class AnalyticsService {
         return (int) days;
     }
 
-    public DecayTimerDTO getDecayTimer(String summonerName, String serverString)
+    public DecayTimerDTO getDecayTimer(String summonerName, ServerType type)
             throws IOException, NoMatchListException, NoRankedMatchException {
         DecayTimerDTO dto = new DecayTimerDTO();
-
-        ServerType type = ServerType.valueOf(serverString.toUpperCase());
-        Player player = playerService.getPlayer(summonerName, serverString);
+        Player player = playerService.getPlayer(summonerName, type);
 
         LeagueTier leagueTier = riotGamesApiService.getPlayerLeague(player.getId(), type).getLeagueTier();
         dto.setLeagueTier(leagueTier.toString());
@@ -121,7 +119,7 @@ public class AnalyticsService {
                 dtos) {
             for (Participants participant :
                     copyParticipants) {
-                if (dto.getSummonerName() == participant.getSummonerName()) {
+                if (dto.getSummonerName().equals(participant.getSummonerName())) {
                     for (Champion champion :
                             championsByIds) {
                         if (champion.getId().equals(participant.getChampionId())) {

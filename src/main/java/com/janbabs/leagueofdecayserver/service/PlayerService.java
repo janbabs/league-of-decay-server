@@ -18,7 +18,12 @@ public class PlayerService {
         this.riotGamesApiService = riotGamesApiService;
     }
 
-    public Player getPlayer(String summonerName, String serverTypeInString) throws IOException {
+    public Player getPlayer(String summonerName, ServerType type) throws IOException {
+        return riotGamesApiService.getPlayer(summonerName, type);
+    }
+
+    @Deprecated
+    private Player getPlayerFromDatabaseOrRiotAPI(String summonerName, String serverTypeInString) throws IOException {
         ServerType serverType = ServerType.valueOf(serverTypeInString.toUpperCase());
         Player player = playerRepository.findBySummonerNameAndServerType(summonerName, serverType);
         if (player != null) {

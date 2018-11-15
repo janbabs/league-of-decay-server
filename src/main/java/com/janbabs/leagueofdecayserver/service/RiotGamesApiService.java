@@ -20,6 +20,7 @@ import static com.janbabs.leagueofdecayserver.utils.LeagueTier.UNRANKED;
 @Service
 public class RiotGamesApiService {
 
+    private static final int MAX_NUMBER_OF_GAMES = 100;
     private RiotGamesApiRepository riotGamesApiRepository;
 
     public RiotGamesApiService(RiotGamesApiRepository riotGamesApiRepository) {
@@ -41,29 +42,24 @@ public class RiotGamesApiService {
     }
 
 
-    public SummonerMatches getMatchList(long accountId, ServerType type) throws IOException, NoMatchListException {
+    public SummonerMatches getMatchList(Long accountId, ServerType serverType) throws IOException, NoMatchListException {
+        return getMatchList(accountId, serverType, MAX_NUMBER_OF_GAMES);
+    }
+
+    public SummonerMatches getMatchList(Long accountId, ServerType serverType, int numberOfGames) throws IOException, NoMatchListException {
         Gson gson = new Gson();
-        String jsonString = riotGamesApiRepository.getMatchListJson(accountId, type);
+        String jsonString = riotGamesApiRepository.getMatchListJson(accountId, serverType, numberOfGames);
         return gson.fromJson(jsonString, SummonerMatches.class);
         // TODO: 22.10.2018 clean up code
     }
 
-    public SummonerMatches getMatchList(Long accountId, ServerType type, int numberOfGames) throws IOException, NoMatchListException {
+    public com.janbabs.leagueofdecayserver.riotgamesModels.League getPlayerLeague(Long summonerId, ServerType serverType) {
         Gson gson = new Gson();
-        String jsonString = riotGamesApiRepository.getMatchListJson(accountId, type, numberOfGames);
-        return gson.fromJson(jsonString, SummonerMatches.class);
-        // TODO: 22.10.2018 clean up code
-    }
-
-    public com.janbabs.leagueofdecayserver.riotgamesModels.League getPlayerLeague(long summonerId, ServerType type) {
-        Gson gson = new Gson();
-        String jsonString = riotGamesApiRepository.getPlayerLeague(summonerId, type);
+        String jsonString = riotGamesApiRepository.getPlayerLeague(summonerId, serverType);
         List<League> leagues = gson.fromJson(jsonString, new TypeToken<List<League>>(){}.getType());
 
-        LeagueTier tier;
         for (League league: leagues) {
             if (league.queueType.equals("RANKED_SOLO_5x5")) {
-                tier = LeagueTier.valueOf(league.tier);
                 return new com.janbabs.leagueofdecayserver.riotgamesModels.League(LeagueTier.valueOf(league.tier), league.rank);
             }
         }
@@ -77,47 +73,34 @@ public class RiotGamesApiService {
     public Participants[] getParticipants(ServerType server, String summonerName) throws IOException, NoCurrentlyPlayedGame {
         Gson gson = new Gson();
         Player player = getPlayer(summonerName, server);
-        //Geting currentGameInfo
+
+        //Getting currentGameInfo
         String json = riotGamesApiRepository.getParticipantsJson(server, player.getId());
         JsonParser parser = new JsonParser();
         JsonObject obj = parser.parse(json).getAsJsonObject();
+
         //Parsing currentGameInfo to participants
         JsonElement element = obj.get("participants");
 
-        //Creating participants from JsonElement
-        Participants[] participants = gson.fromJson(element, Participants[].class);
-
-        return participants;
+        //Return participants from JsonElement
+        return gson.fromJson(element, Participants[].class);
     }
 
     static private class League
     {
         private String hotStreak;
-
         private String leagueName;
-
         private String freshBlood;
-
         private String tier;
-
         private String playerOrTeamId;
-
         private String leaguePoints;
-
         private String leagueId;
-
         private String inactive;
-
         private String rank;
-
         private String veteran;
-
         private String queueType;
-
         private String losses;
-
         private String playerOrTeamName;
-
         private String wins;
 
         public String getHotStreak ()
@@ -258,12 +241,6 @@ public class RiotGamesApiService {
         public void setWins (String wins)
         {
             this.wins = wins;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "ClassPojo [hotStreak = "+hotStreak+", leagueName = "+leagueName+", freshBlood = "+freshBlood+", tier = "+tier+", playerOrTeamId = "+playerOrTeamId+", leaguePoints = "+leaguePoints+", leagueId = "+leagueId+", inactive = "+inactive+", rank = "+rank+", veteran = "+veteran+", queueType = "+queueType+", losses = "+losses+", playerOrTeamName = "+playerOrTeamName+", wins = "+wins+"]";
         }
     }
 }

@@ -16,9 +16,9 @@ public class Champion {
     private Integer id;
     @Column(length = 40)
     private String title;
-    @Column(name = "champion_key", length = 256)
+    @Column(name = "champion_key", length = 30)
     private String key;
-    @Column(length = 200)
+    @Column(length = 256)
     private String blurb;
 
     public Champion() {

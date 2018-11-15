@@ -1,9 +1,6 @@
 package com.janbabs.leagueofdecayserver.controller;
 
-import com.janbabs.leagueofdecayserver.exception.NoCurrentlyPlayedGame;
-import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
-import com.janbabs.leagueofdecayserver.exception.NoRankedMatchException;
-import com.janbabs.leagueofdecayserver.exception.UnsupportedServerType;
+import com.janbabs.leagueofdecayserver.exception.*;
 import com.janbabs.leagueofdecayserver.service.AnalyticsService;
 import com.janbabs.leagueofdecayserver.transport.DecayTimerDTO;
 import com.janbabs.leagueofdecayserver.transport.MatchPlayerDTO;
@@ -28,8 +25,14 @@ public class AnalyticsController {
     @GetMapping("/time/{server}/{name}")
     public DecayTimerDTO getDecayTimer(@PathVariable("server") String server,
                                        @PathVariable("name") String summonerName)
-            throws IOException, NoMatchListException, NoRankedMatchException {
-        return analyticsService.getDecayTimer(summonerName, server);
+            throws IOException, NoMatchListException, NoRankedMatchException, UnsupportedServerType {
+        ServerType type;
+        try {
+            type = ServerType.valueOf(server.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new UnsupportedServerType("Unsupported server type!");
+        }
+        return analyticsService.getDecayTimer(summonerName, type);
     }
 
     @GetMapping("/playedMatchDetail/{server}/{summonerName}")
@@ -47,7 +50,13 @@ public class AnalyticsController {
     @ExceptionHandler(NoMatchListException.class)
     public ResponseEntity handleException (NoMatchListException e) {
         System.out.println(e.getMessage());
-        return new ResponseEntity(e, HttpStatus.NO_CONTENT);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    @ExceptionHandler(InvalidApiKeyException.class)
+    public ResponseEntity handleException(InvalidApiKeyException e) {
+        System.out.println(e.getMessage());
+        return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(IOException.class)
@@ -58,13 +67,12 @@ public class AnalyticsController {
 
     @ExceptionHandler(UnsupportedServerType.class)
     public ResponseEntity handleException(UnsupportedServerType e) {
-        e.printStackTrace();
-        return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity(HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NoCurrentlyPlayedGame.class)
     public ResponseEntity handleException(NoCurrentlyPlayedGame e) {
         e.printStackTrace();
-        return new ResponseEntity("No current game played", HttpStatus.NO_CONTENT);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 }

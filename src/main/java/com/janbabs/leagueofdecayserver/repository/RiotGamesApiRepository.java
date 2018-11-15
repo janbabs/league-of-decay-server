@@ -13,8 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+
 
 @Repository
 public class RiotGamesApiRepository {
@@ -33,8 +32,6 @@ public class RiotGamesApiRepository {
 
     public String getPlayerJsonFromSummonerName(String summonerName, ServerType serverType) throws IOException {
         String  jsonString;
-//        summonerName = URLEncoder.encode(summonerName, StandardCharsets.UTF_8);
-//        summonerName = URLEncoder.encode(summonerName, "UTF-8");
         jsonString = getJSonFromServer("https://" + serverType + "." +
                         SummonerByIdURL + summonerName);
         return jsonString;

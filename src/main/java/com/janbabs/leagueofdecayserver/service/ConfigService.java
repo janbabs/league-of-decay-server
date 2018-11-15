@@ -24,7 +24,7 @@ public class ConfigService {
         return configRepository.findByName("apikey").getValue();
     }
 
-    public void changeApikeyValue(String newValue) {
+    public void changeApiKeyValue(String newValue) {
         Config config = configRepository.findByName("apikey");
         if (config == null) {
             config = new Config();
@@ -32,5 +32,6 @@ public class ConfigService {
         }
         config.setValue(newValue);
         configRepository.save(config);
+        riotGamesApiService.upDateKey();
     }
 }

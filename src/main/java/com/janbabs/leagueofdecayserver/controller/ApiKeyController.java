@@ -17,6 +17,6 @@ public class ApiKeyController {
 
     @RequestMapping(method = PUT)
     public void updateKey(@RequestParam(name = "value") String newValue) {
-        configService.changeApikeyValue(newValue);
+        configService.changeApiKeyValue(newValue);
     }
 }
