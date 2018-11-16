@@ -79,11 +79,11 @@ public class AnalyticsService {
         List<Participants> participants = Arrays.asList(riotGamesApiService.getParticipants(server, summonerName));
         try {
             List<MatchPlayerDTO> dtos = participants.parallelStream().map
-                    (e -> {
+                    (participant -> {
                         try {
-                            return getMatchPlayerDTOFromParticipant(e, server);
-                        } catch (IOException e1) {
-                            throw new UncheckedIOException(e1);
+                            return getMatchPlayerDTOFromParticipant(participant, server);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
                         }
                     }).collect(Collectors.toList());
             putChampions(participants, dtos);

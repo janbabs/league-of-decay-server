@@ -48,14 +48,13 @@ public class RiotGamesApiRepository {
         }
     }
 
-    public String getPlayerLeague(long summonerId, ServerType serverType) {
+    public String getPlayerLeague(long summonerId, ServerType serverType) throws IOException {
         String  JsonString = null;
         try {
             JsonString = getJSonFromServer("https://" + serverType + "." +
                     LeagueByIdURL + summonerId);
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-            // TODO: 03.10.2018 fix exception
         }
 
         return JsonString;

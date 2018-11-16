@@ -1,6 +1,9 @@
 package com.janbabs.leagueofdecayserver.service;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.janbabs.leagueofdecayserver.exception.NoCurrentlyPlayedGame;
 import com.janbabs.leagueofdecayserver.exception.NoMatchListException;
@@ -28,16 +31,11 @@ public class RiotGamesApiService {
     }
 
     public Player getPlayer(String summonerName, ServerType serverType) throws IOException {
-
         summonerName = summonerName.replaceAll(" ", "%20");
-
         String JsonString = riotGamesApiRepository.getPlayerJsonFromSummonerName(summonerName, serverType);
-
-
         Gson gson = new Gson();
         Player player = gson.fromJson(JsonString, Player.class);
         player.setServerType(serverType);
-
         return player;
     }
 
@@ -50,10 +48,9 @@ public class RiotGamesApiService {
         Gson gson = new Gson();
         String jsonString = riotGamesApiRepository.getMatchListJson(accountId, serverType, numberOfGames);
         return gson.fromJson(jsonString, SummonerMatches.class);
-        // TODO: 22.10.2018 clean up code
     }
 
-    public com.janbabs.leagueofdecayserver.riotgamesModels.League getPlayerLeague(Long summonerId, ServerType serverType) {
+    public com.janbabs.leagueofdecayserver.riotgamesModels.League getPlayerLeague(Long summonerId, ServerType serverType) throws IOException {
         Gson gson = new Gson();
         String jsonString = riotGamesApiRepository.getPlayerLeague(summonerId, serverType);
         List<League> leagues = gson.fromJson(jsonString, new TypeToken<List<League>>(){}.getType());
