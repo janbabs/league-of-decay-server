@@ -1,27 +1,22 @@
-package com.janbabs.leagueofdecayserver.user;
+package com.janbabs.leagueofdecayserver.transport;
 
-import javax.persistence.*;
+import com.janbabs.leagueofdecayserver.user.Role;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
-import static javax.persistence.CascadeType.ALL;
-import static javax.persistence.FetchType.EAGER;
-
-@Entity
-public class User {
-
-    @Id
-    @GeneratedValue
-    private Integer id;
-    @Column(unique = true)
+public class UserDTO {
+    @NotNull
+    @Size(max = 20, min = 6, message = "Username must be between 6 and 20 characters!")
     private String username;
+    @NotNull
+    @Size(max = 30, min = 8, message = "Password must contains between 8 and 30 characters!")
     private String password;
-    @OneToMany(fetch = EAGER, cascade = ALL)
+    @NotNull
     private List<Role> roles;
 
-    public User() {
-    }
-
-    public User(String username, String password, List<Role> roles) {
+    public UserDTO(String username, String password, List<Role> roles) {
         this.username = username;
         this.password = password;
         this.roles = roles;
